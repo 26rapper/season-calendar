@@ -1,5 +1,10 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>제철 검색 달력</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
 <style>
 /* 폰 먼저. 위: 달 고르기 → 네 갈래 탭(지금 올리면 좋아요 · 지금이 한창 · 아직 팔려요 · 철 아님) → 품목 줄(이름 · 찾는 양 · 한 줄 설명) → 누르면 1년 흐름 · 올릴 때 · 공급처 · 값 */
@@ -85,6 +90,8 @@ footer { margin-top: 28px; font-size: 12px; color: var(--muted); border-top: 1px
 footer p { margin: 0 0 6px; max-width: 65ch; }
 @media (prefers-reduced-motion: no-preference) { .card { transition: border-color .15s; } }
 </style>
+</head>
+<body>
 <div class="wrap">
 <header class="top">
   <h1>제철 검색 달력 <button type="button" id="helpBtn" aria-expanded="false">보는 법</button></h1>
@@ -188,7 +195,7 @@ function card(item, m, st) {
   d.innerHTML = `<div class="row"><span class="name">${item.name}</span>${chips.join('')}<span class="rank">찾는 양 <b>${RANK[item.name]}위</b>/${DATA.items.length}</span></div>
   <div class="meter" aria-hidden="true"><i style="width:${Math.max(3, Math.round(item.peakIdx / MAXPEAK * 100))}%"></i></div>
   <p class="say ${st}">${say(item, m, st)}</p>
-  <div class="more">${openName === item.name ? '접기 ▲' : '누르면 1년 흐름 · 올릴 때${DATA.meta.public ? '' : ' · 공급처 · 값'} ▼'}</div>
+  <div class="more">${openName === item.name ? '접기 ▲' : ('누르면 1년 흐름 · 올릴 때' + (DATA.meta.public ? '' : ' · 공급처 · 값') + ' ▼')}</div>
   <div class="detail">
     <h3>작년 1년 흐름 — 제일 많이 찾는 달 <b>${pm}월</b> · 철 <b>${ss.length ? ss.join('·') + '월' : '없음'}</b>(${ss.length}달)</h3>
     ${bars(item, m)}
@@ -225,3 +232,5 @@ if (DATA.meta.public) { const hl = $('#helpLast'); if (hl) hl.textContent = '품
 $('#helpBtn').onclick = () => { const h = $('#help'); const on = !h.classList.contains('on'); h.classList.toggle('on', on); $('#helpBtn').setAttribute('aria-expanded', String(on)); };
 render();
 </script>
+</body>
+</html>
