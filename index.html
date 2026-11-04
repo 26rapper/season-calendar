@@ -65,17 +65,15 @@ h1 { font-size: 18px; margin: 0; font-weight: 700; letter-spacing: -.01em; }
 .notice { margin-top: 10px; font-size: 13px; padding: 8px 12px; border-radius: 10px; background: var(--soft); color: var(--ink); }
 .notice b { font-weight: 600; }
 
-.tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 12px 0 6px; }
-.tabs button { border: 1px solid var(--line); background: var(--panel); border-radius: 12px; padding: 9px 4px 7px; text-align: center; min-width: 0; line-height: 1.1; }
-.tabs button b { display: block; font-size: 22px; font-weight: 700; }
-.tabs button span { display: block; font-size: 10.5px; color: var(--muted); margin-top: 4px; line-height: 1.25; }
-.tabs button.key b, .tabs button.prep b { color: var(--prep); } .tabs button.peak b { color: var(--peak); } .tabs button.sell b { color: var(--sell); } .tabs button.rank b { color: var(--ink); }
-.tabs button[aria-pressed="true"] { border-color: transparent; } .tabs button[aria-pressed="true"] span { color: var(--ink); font-weight: 500; }
-.tabs button.prep[aria-pressed="true"] { background: var(--prep-soft); box-shadow: inset 0 0 0 1.5px var(--prep); }
-.tabs button.peak[aria-pressed="true"] { background: var(--peak-soft); box-shadow: inset 0 0 0 1.5px var(--peak); }
-.tabs button.sell[aria-pressed="true"] { background: var(--sell-soft); box-shadow: inset 0 0 0 1.5px var(--sell); }
-.tabs button.key[aria-pressed="true"] { background: var(--prep-soft); box-shadow: inset 0 0 0 1.5px var(--prep); }
-.tabs button.rank[aria-pressed="true"] { background: var(--soft); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 12px 0 6px; padding: 2px 0 3px; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 7px 12px 7px 10px; font-size: 13px; font-weight: 600; line-height: 1.2; color: var(--ink); white-space: nowrap; }
+.tabs button i { width: 8px; height: 8px; border-radius: 50%; background: var(--rest); flex: 0 0 auto; }
+.tabs button.key i, .tabs button.prep i { background: var(--prep); } .tabs button.peak i { background: var(--peak); } .tabs button.sell i { background: var(--sell); } .tabs button.rank i { background: var(--ink); }
+.tabs button b { font-weight: 500; font-size: 12px; color: var(--muted); }
+.tabs button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tabs button[aria-pressed="true"] b { color: inherit; opacity: .8; }
+.tabs button[aria-pressed="true"] i { box-shadow: 0 0 0 2px var(--bg); }
 .how { font-size: 13px; color: var(--muted); margin: 8px 0 10px; } .how b { color: var(--ink); font-weight: 600; }
 
 .list { display: grid; gap: 8px; }
@@ -156,16 +154,16 @@ const DATA = {"meta": {"generated": "2026-11-04", "fetched": "2026-11-04", "n": 
 const M = DATA.meta, YEARS = M.years, REF = M.lastFull;
 const JG = ['소한·대한','입춘·우수','경칩·춘분','청명·곡우','입하·소만','망종·하지','소서·대서','입추·처서','백로·추분','한로·상강','입동·소설','대설·동지'];
 const CAL = [1,2,3,4,5,6,7,8,9,10,11,12];
-const STATE = { key: '지금 준비할 것', prep: '지금 올리면 좋아요', peak: '지금이 한창', sell: '아직 팔려요', rank: '이 달 순위', rest: '철 아님' };
-const SHORT = { key: '지금 준비', prep: '올리면 좋아요', peak: '지금이 한창', sell: '아직 팔려요', rank: '이 달 순위' };
+const STATE = { key: '지금 올릴 것', prep: '곧 뜰 것', peak: '지금 한창', sell: '막바지', rank: '이 달 순위', rest: '철 아님' };
+const SHORT = STATE;
 const TABS = ['key', 'prep', 'peak', 'sell', 'rank'];
 const KEY_TOP = 20;
 const HOW = {
-  key: '<b>다음 달이나 이 달에 제일 많이 찾는 품목 가운데 찾는 양 ' + KEY_TOP + '위 안</b>만 모았어요(리빙 기준선 제외). 영상 속 규칙(제일 많이 찾는 달 3주 전에 올리기)대로 올릴 날을 붙였어요.',
-  prep: '<b>다음 1~3달 안에 제일 많이 찾는</b> 품목이에요. 영상 속 규칙대로면 제일 많이 찾는 달 3주 전에 올려요.',
-  peak: '고른 해에 <b>이 달에 제일 많이 찾은</b> 품목이에요. 지금 올리면 한창의 꼬리를 타요.',
-  sell: '제일 많이 찾는 달은 지났지만, 이 달에도 <b>그 절반 넘게</b> 찾은 품목이에요.',
-  rank: '고른 달에 <b>많이 찾은 순서</b>로 61개 전부예요(우리가 받은 61낱말 안에서의 순위). 철이 아닌 품목은 아래쪽에 와요.' };
+  key: '<b>지금 올려야 할 것</b> — 다음 달이나 이 달에 제일 많이 찾는 품목 가운데 찾는 양 ' + KEY_TOP + '위 안(리빙 기준선 제외). 영상 속 규칙(제일 많이 찾는 달 3주 전에 올리기)대로 올릴 날을 붙였어요.',
+  prep: '<b>곧 뜰 것</b> — 1~3달 뒤에 제일 많이 찾는 품목 전부. 제일 많이 찾는 달 3주 전에 올려요.',
+  peak: '<b>지금 한창</b> — 이 달이 1년 중 제일 많이 찾는 달인 품목.',
+  sell: '<b>막바지</b> — 제일 많이 찾는 달은 지났지만 이 달에도 그 절반 넘게 찾는 품목. 끝나가는 중이에요.',
+  rank: '<b>이 달 순위</b> — 고른 달에 많이 찾은 순서로 61개 전부(우리가 받은 61낱말 안에서의 순위). 철이 아닌 품목은 아래쪽에 와요.' };
 const $ = (s, r=document) => r.querySelector(s);
 const fmt = v => (Math.round(v*10)/10).toLocaleString('ko-KR');
 const pct = (a, b) => b > 0 ? Math.round(a / b * 100) : 0;
@@ -231,7 +229,7 @@ function say(item, pr, m, st) {
   const v = pr.vals[m - 1], p = pr.p, pm = pr.pm;
   if (st === 'key') { const dist = (pm - m + 12) % 12, up = upDate(item, pr), nm = (pm % 12) + 1;
     if (dist === 1) return '<b>다음 달(' + pm + '월)</b>에 제일 많이 찾아요' + (v > 0 && p / v >= 1.2 ? ' · 이 달의 ' + (p / v >= 10 ? Math.round(p / v) : Math.round(p / v * 10) / 10) + '배' : ' · 이 달도 거의 그만큼(' + pct(v, p) + '%)') + (year === NOW.y ? ' · 올릴 날 <b>' + up.text + '</b>' : '');
-    return '<b>이 달이 제일 많이 찾는 달</b>이에요 · 올릴 날은 지났어요 · 다음 달(' + nm + '월)엔 ' + pct(pr.vals[nm - 1], p) + '%로'; }
+    return '<b>이 달이 제일 많이 찾는 달</b>이에요 · 올릴 날은 지났고 지금 한창 · 다음 달(' + nm + '월)엔 ' + pct(pr.vals[nm - 1], p) + '%로'; }
   if (st === 'rank') { const st2 = stateOf(pr, m);
     return '이 달 찾는 양 <b>' + fmt(v) + '</b> · 제일 많이 찾는 달 ' + pm + '월(' + fmt(p) + ')의 ' + pct(v, p) + '% <span class="chip ' + st2 + '">' + STATE[st2] + '</span>'; }
   if (st === 'prep') { const times = v > 0 ? p / v : null; const up = upDate(item, pr);
@@ -315,22 +313,22 @@ function render() {
   MONTH_RANK = {}; groups.rank.forEach((it, i) => MONTH_RANK[it.name] = i + 1);
   const sample = prof.get(DATA.items[0].name), isFill = sample && sample.fill[month - 1];
   $('#head').innerHTML = '<h2>' + year + '년 ' + month + '월 <small>' + JG[month - 1] + (year === NOW.y && month === NOW.m ? ' · 지금' : '') + '</small></h2>' +
-    '<p class="sub">이 달에 손님이 네이버에서 많이 찾은 농수산물 · 품목 ' + DATA.items.length + '개 · 지금 준비 ' + groups.key.length + ' · 한창 ' + groups.peak.length + '</p>' +
+    '<p class="sub">이 달에 손님이 네이버에서 많이 찾은 농수산물 · 품목 ' + DATA.items.length + '개 · 지금 올릴 것 ' + groups.key.length + ' · 지금 한창 ' + groups.peak.length + '</p>' +
     (isFill ? '<div class="notice"><b>' + year + '년 ' + month + '월은 아직 안 왔어요.</b> 한 해 전(' + (year - 1) + '년) ' + month + '월 값으로 채워서 보여 드려요. 빗금 막대가 그 달이에요.</div>' : '');
-  $('#tabs').innerHTML = TABS.map(k => '<button type="button" class="' + k + '" data-k="' + k + '" aria-pressed="' + (k === tab) + '"><b>' + groups[k].length + '</b><span>' + SHORT[k] + '</span></button>').join('');
+  $('#tabs').innerHTML = TABS.map(k => '<button type="button" class="' + k + '" data-k="' + k + '" aria-pressed="' + (k === tab) + '"><i aria-hidden="true"></i><span>' + SHORT[k] + '</span><b>' + groups[k].length + '</b></button>').join('');
   document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { tab = b.dataset.k; remember('calTab', tab); render(); });
-  $('#how').innerHTML = '<b>' + month + '월 · ' + STATE[tab] + ' ' + groups[tab].length + '개</b> — ' + HOW[tab];
+  $('#how').innerHTML = HOW[tab] + ' <b>' + month + '월엔 ' + groups[tab].length + '개.</b>';
   const list = $('#list'); list.innerHTML = '';
   groups[tab].forEach(it => list.appendChild(card(it, prof.get(it.name), month, tab)));
   if (!groups[tab].length) { const p = document.createElement('p'); p.className = 'empty'; p.textContent = '이 달엔 없어요.'; list.appendChild(p); }
   $('#help').innerHTML = '<p><b>무엇</b> — 네이버에서 농수산물 61가지를 달마다 얼마나 검색했는지(' + M.period + ') 모은 달력이에요. 위에서 해와 달을 고르면 그 달 기준으로 품목이 넷으로 나뉘어요. 달 칸의 <b>한창 n</b>은 그 달에 제일 많이 찾은 품목 수예요.</p>' +
-    '<p><b>지금 준비</b> — 다음 달이나 이 달에 제일 많이 찾는 품목 중 찾는 양 ' + KEY_TOP + '위 안(영상 속 규칙: 제일 많이 찾는 달 3주 전에 올리기). <b>올리면 좋아요</b> — 다음 1~3달 안에 제일 많이 찾는 품목 전부. <b>지금이 한창</b> — 이 달이 그 해 중 제일 많이 찾은 달. <b>아직 팔려요</b> — 한창은 지났지만 아직 그 절반 넘게 찾음. <b>이 달 순위</b> — 고른 달에 많이 찾은 순서로 61개 전부(철 아닌 것은 아래쪽).</p>' +
+    '<p><b>지금 올릴 것</b> — 다음 달이나 이 달에 제일 많이 찾는 품목 중 찾는 양 ' + KEY_TOP + '위 안(영상 속 규칙: 제일 많이 찾는 달 3주 전에 올리기). <b>곧 뜰 것</b> — 1~3달 뒤에 제일 많이 찾는 품목 전부. <b>지금 한창</b> — 이 달이 1년 중 제일 많이 찾는 달. <b>막바지</b> — 한창은 지났지만 아직 그 절반 넘게 찾음. <b>이 달 순위</b> — 고른 달에 많이 찾은 순서로 61개 전부(철 아닌 것은 아래쪽).</p>' +
     '<p>이 달력의 자료는 네이버 <b>검색어 트렌드</b>(낱말 61개를 달마다 얼마나 검색했는지)예요. 데이터랩 쇼핑인사이트의 \'인기검색어\'(분야 안에서 쇼핑 클릭이 많은 낱말 순위)와는 자료가 달라서, 거기 뜨는 낱말이 여기 없을 수 있어요.</p>' +
     '<p><b>찾는 양</b> — ' + M.anchor + '으로 놓고 견준 크기예요. 사람 수가 아니라 비율이에요. <b>n위</b>는 고른 해의 꼭대기 크기로 61개 중 몇 번째인지.</p>' +
     '<p><i class="sw" style="background:var(--peak)"></i>제일 많이 찾은 달 · <i class="sw" style="background:var(--ink)"></i>고른 달 · 빗금 막대는 아직 안 온 달을 한 해 전 값으로 채운 것(' + NOW.y + '년 11 · 12월).</p>' +
     '<p>' + helpLast() + '</p>';
   $('#foot').innerHTML = '<p>바탕 자료: 네이버 데이터랩 검색어 트렌드(달 단위 · 모든 기기 · 성별 · 나이 합침) ' + M.period + ', ' + M.fetched + ' 받음. \'찾는 양\'은 사람 수가 아니라 비율이에요(' + M.anchor + '). 판매량 · 쿠팡 쪽 수요 · 값은 이 자료에 없어요. \'이 달 순위\'는 우리가 받은 61낱말 안에서의 순서라, 데이터랩 쇼핑인사이트 인기검색어(분야 안 쇼핑 클릭 순위)와는 달라요.</p>' +
-    '<p>네 갈래는 고른 해의 값으로 나눠요. 올릴 때 = 제일 많이 찾는 달 1일에서 3주 전(영상 속 규칙, 가정), 지났으면 지금. 내릴 때 = ' + REF + '년에 절반 아래로 떨어진 달 1일. \'다른 뜻 섞임\'은 농산물 말고 다른 뜻 검색이 섞일 수 있는 낱말(사과 · 배 · 무 · 김 · 밤 · 굴 · 방어 · 대게 · 대봉).</p>' + privateFoot();
+    '<p>갈래는 고른 해의 값으로 나눠요. 올릴 때 = 제일 많이 찾는 달 1일에서 3주 전(영상 속 규칙, 가정), 지났으면 지금. 내릴 때 = ' + REF + '년에 절반 아래로 떨어진 달 1일. \'다른 뜻 섞임\'은 농산물 말고 다른 뜻 검색이 섞일 수 있는 낱말(사과 · 배 · 무 · 김 · 밤 · 굴 · 방어 · 대게 · 대봉).</p>' + privateFoot();
 }
 $('#helpBtn').onclick = () => { const h = $('#help'); const on = !h.classList.contains('on'); h.classList.toggle('on', on); $('#helpBtn').setAttribute('aria-expanded', String(on)); };
 render();
