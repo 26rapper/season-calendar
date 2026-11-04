@@ -170,6 +170,7 @@ const fmt = v => (Math.round(v*10)/10).toLocaleString('ko-KR');
 const pct = (a, b) => b > 0 ? Math.round(a / b * 100) : 0;
 const TODAY = new Date();
 const NOW = { y: TODAY.getFullYear(), m: TODAY.getMonth() + 1 };
+const CUR = YEARS.includes(NOW.y) ? NOW.y : REF; // 올릴 때 · 내릴 때의 기준 흐름 = 올해(아직 안 온 달은 작년 값) — 엔진 8 과 같음
 
 // 그 해 12달 모양. 아직 안 온 달(값 없음)은 한 해 전 같은 달 값으로 채우고 fill 표시
 const PROF = new Map();
@@ -194,11 +195,17 @@ function seasonMonths(pr) { return CAL.filter(k => pr.vals[k - 1] >= 0.5 * pr.p)
 function dropMonth(pr) { for (let i = 1; i <= 11; i++) { const k = ((pr.pm - 1 + i) % 12) + 1; if (pr.vals[k - 1] < 0.5 * pr.p) return k; } return null; }
 function startMonth(pr) { let k = pr.pm; for (let i = 0; i < 12; i++) { const prevK = ((k - 2 + 12) % 12) + 1; if (pr.vals[prevK - 1] >= 0.5 * pr.p) k = prevK; else return k; } return null; }
 function ruleMonth(pr) { let k = pr.pm; for (let i = 0; i < 11; i++) { const prevK = ((k - 2 + 12) % 12) + 1; if (pr.vals[prevK - 1] >= 0.9 * pr.p) k = prevK; else break; } return k; }
-function upDate(item, pr) { // 올릴 날 = 제일 많이 찾는 달(보는 해의 흐름 · 90% 넘게 비슷한 달이 앞에 이어지면 그 첫 달) 1일 − 21일. 지났으면 '지금'
-  pr = pr || profile(item, REF); const pm = ruleMonth(pr);
-  const y = pm >= NOW.m ? NOW.y : NOW.y + 1; const d = new Date(y, pm - 1, 1); d.setDate(d.getDate() - 21);
-  if (d <= TODAY) return { text: '지금', now: true };
-  return { text: (d.getFullYear() !== NOW.y ? d.getFullYear() + '년 ' : '') + (d.getMonth() + 1) + '월 ' + d.getDate() + '일쯤', now: false };
+function upDate(item, pr) { // 올릴 날 = 올릴 달(제일 많이 찾는 달 · 90% 넘게 비슷한 달이 앞에 이어지면 그 첫 달) 1일 − 21일. 바퀴는 '내릴 날(절반 아래 달 1일)이 아직 앞인 첫 바퀴' — 올릴 날이 지났어도 내릴 날 전이면 '지금'(엔진 8 회전 2판과 같은 셈)
+  pr = pr || profile(item, CUR); const rm = ruleMonth(pr), dm = dropMonth(pr);
+  if (dm === null) return { text: '연중', now: true };
+  for (const y of [NOW.y - 1, NOW.y, NOW.y + 1]) {
+    const up = new Date(y, rm - 1, 1); up.setDate(up.getDate() - 21);
+    const down = new Date(dm > rm ? y : y + 1, dm - 1, 1);
+    if (down <= TODAY) continue;
+    if (up <= TODAY) return { text: '지금', now: true };
+    return { text: (up.getFullYear() !== NOW.y ? up.getFullYear() + '년 ' : '') + (up.getMonth() + 1) + '월 ' + up.getDate() + '일쯤', now: false };
+  }
+  return { text: '모름', now: false };
 }
 const RANK = {}; YEARS.forEach(y => { RANK[y] = {}; [...DATA.items].sort((a, b) => profile(b, y).p - profile(a, y).p).forEach((it, i) => RANK[y][it.name] = i + 1); });
 const PEAKCNT = {}; YEARS.forEach(y => { PEAKCNT[y] = Array(13).fill(0); DATA.items.forEach(it => PEAKCNT[y][profile(it, y).pm]++); });
@@ -281,7 +288,7 @@ function card(item, pr, m, st) {
   const chips = ['<span class="chip">' + item.cat + '</span>'];
   if (item.soft) chips.push('<span class="chip warn">무른 것</span>');
   if (item.note) chips.push('<span class="chip warn">다른 뜻 섞임</span>');
-  const open = openName === item.name, ss = seasonMonths(pr), dm = dropMonth(pr), ref = profile(item, REF), up = upDate(item, ref);
+  const open = openName === item.name, ss = seasonMonths(pr), dm = dropMonth(pr), ref = profile(item, CUR), up = upDate(item, ref);
   const d = document.createElement('article'); d.className = 'card' + (open ? ' open' : ''); d.tabIndex = 0;
   d.innerHTML = '<div class="row"><span class="name">' + item.name + '</span>' + chips.join('') + '<span class="rank">' + (st === 'rank' ? m + '월 <b>' + (MONTH_RANK[item.name] || '—') + '위</b>' : '찾는 양 <b>' + RANK[year][item.name] + '위</b>') + '/' + DATA.items.length + '</span></div>' +
     barsHtml(pr, m, false) +
@@ -292,9 +299,9 @@ function card(item, pr, m, st) {
       barsHtml(pr, m, true) + '<div class="season" aria-hidden="true">' + CAL.map(k => '<i class="' + (ss.includes(k) ? 'on' : '') + '"></i>').join('') + '</div>' +
       '<div class="key"><span><i style="background:var(--peak)"></i>제일 많이 찾은 달</span><span><i style="background:var(--ink)"></i>고른 달</span><span><i style="background:var(--sell)"></i>철(절반 넘게 찾는 달)</span>' + (pr.partial ? '<span><i class="fill"></i>작년 값으로 채움</span>' : '') + '</div>' +
       '<h3>네 해 겹쳐 보기 <small>굵은 선이 ' + year + '년 · 옅을수록 오래된 해</small></h3>' + yearsSvg(item) + legendHtml() + yearsTable(item) +
-      '<h3>올릴 때 · 내릴 때 <small>' + REF + '년 흐름 기준 · 영상 규칙(가정)</small></h3><dl>' +
+      '<h3>올릴 때 · 내릴 때 <small>' + CUR + '년 흐름 기준(아직 안 온 달은 ' + (CUR - 1) + '년 값) · 영상 규칙(가정)</small></h3><dl>' +
       '<dt>올리기</dt><dd><b>' + up.text + '</b> — 제일 많이 찾는 달(' + ruleMonth(ref) + '월' + (ruleMonth(ref) !== ref.pm ? ' · ' + ref.pm + '월과 거의 같음' : '') + ') 3주 전' + (up.now ? '. 올릴 날은 지났고 아직 찾는 동안이라 지금' : '') + '. ' + REF + '년엔 <b>' + (startMonth(ref) ? startMonth(ref) + '월' : '연중') + '</b>부터 오르기 시작</dd>' +
-      '<dt>내리기</dt><dd>' + (dropMonth(ref) ? '<b>' + dropMonth(ref) + '월 1일</b> — ' + REF + '년에 ' + dropMonth(ref) + '월부터 절반 아래로' : '모름 — 연중 절반 넘게 찾음') + '</dd></dl>' +
+      '<dt>내리기</dt><dd>' + (dropMonth(ref) ? '<b>' + dropMonth(ref) + '월 1일</b> — ' + CUR + '년 흐름에서 ' + dropMonth(ref) + '월부터 절반 아래로' : '모름 — 연중 절반 넘게 찾음') + '</dd></dl>' +
       privateBlock(item) + '</div>' : '');
   const toggle = () => { openName = open ? null : item.name; render(); };
   d.onclick = e => { const lg = e.target.closest('.legend button'); if (lg) { e.stopPropagation(); year = parseInt(lg.dataset.y, 10); remember('calYear', year); render(); return; } toggle(); };
@@ -329,7 +336,7 @@ function render() {
     '<p><i class="sw" style="background:var(--peak)"></i>제일 많이 찾은 달 · <i class="sw" style="background:var(--ink)"></i>고른 달 · 빗금 막대는 아직 안 온 달을 한 해 전 값으로 채운 것(' + NOW.y + '년 11 · 12월).</p>' +
     '<p>' + helpLast() + '</p>';
   $('#foot').innerHTML = '<p>바탕 자료: 네이버 데이터랩 검색어 트렌드(달 단위 · 모든 기기 · 성별 · 나이 합침) ' + M.period + ', ' + M.fetched + ' 받음. \'찾는 양\'은 사람 수가 아니라 비율이에요(' + M.anchor + '). 판매량 · 쿠팡 쪽 수요 · 값은 이 자료에 없어요. \'이 달 순위\'는 우리가 받은 ' + N + '낱말 안에서의 순서라, 데이터랩 쇼핑인사이트 인기검색어(분야 안 쇼핑 클릭 순위)와는 달라요.</p>' +
-    '<p>갈래는 고른 해의 값으로 나눠요. 올릴 때 = 제일 많이 찾는 달 1일에서 3주 전(영상 속 규칙, 가정), 지났으면 지금. 내릴 때 = ' + REF + '년에 절반 아래로 떨어진 달 1일. \'다른 뜻 섞임\'은 농산물 말고 다른 뜻 검색이 섞일 수 있는 낱말(사과 · 배 · 무 · 김 · 밤 · 굴 · 방어 · 대게 · 대봉).</p>' + privateFoot();
+    '<p>갈래는 고른 해의 값으로 나눠요. 올릴 때 = 제일 많이 찾는 달 1일에서 3주 전(영상 속 규칙, 가정), 지났으면 지금. 내릴 때 = 올해 흐름(아직 안 온 달은 작년 값)에서 절반 아래로 떨어진 달 1일. \'다른 뜻 섞임\'은 농산물 말고 다른 뜻 검색이 섞일 수 있는 낱말(사과 · 배 · 무 · 김 · 밤 · 굴 · 방어 · 대게 · 대봉).</p>' + privateFoot();
 }
 $('#helpBtn').onclick = () => { const h = $('#help'); const on = !h.classList.contains('on'); h.classList.toggle('on', on); $('#helpBtn').setAttribute('aria-expanded', String(on)); };
 render();
